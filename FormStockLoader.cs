@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Drawing;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Windows.Forms;
 using System.Windows.Forms.DataVisualization.Charting;
@@ -12,6 +13,7 @@ namespace StockProgram
 {
     public partial class FormStockLoader : Form
     {
+        public static List<Recognizer> recognizers = new List<Recognizer>();
         public FormStockLoader()
         {
             InitializeComponent();
@@ -21,329 +23,62 @@ namespace StockProgram
         {
 
         }
+
+
+
+
         /// <summary>
-        ///  this method highlights the long legged doji pattern and shows it as a rectangle
+        /// Annotate the chart with a rectangle
         /// </summary>
-        /// <param name="candleStickDataSource"></param> the candlestick data source
-        /// <param name="chart"></param> the chart to add the annotation to
-        private void showLongLeggedDoji(List<Candlestick> candleStickDataSource, Chart chart)
+        /// <param name="candleStickDataSource"></param> 
+        /// <param name="chart"></param>
+
+       private void annotateChart(List<Candlestick> candleStickDataSource, Chart chart, Recognizer recognizer, List<int> recognized)
         {
-            Color black = Color.Black;
-            chart.Legends["Legend1"].CustomItems.Add(black, "LongLeggedDoji");
+            // based on the recognizer pattern selected, annotate the chart
+            // for loop going through candlesticks based on recognized list
 
-            // loop through to check for long legged doji patterns
-            for (int i = 0; i < candleStickDataSource.Count; i++)
+            foreach (int i in recognized)
             {
-                if (candleStickDataSource[i].isLongLeggedDoji())
+                // Get the candlestick at the index
+                Candlestick candlestick = candleStickDataSource[i];
+
+                // Create a new rectangle annotation and set its properties
+                RectangleAnnotation rectangle = new RectangleAnnotation
                 {
-                    RectangleAnnotation ann = new();
-                    ann.BackColor = Color.Black;
-                    // surround the certain area with the rectangle
-                    ann.Width = 0.5;
-                    ann.Height = 0.5;
-                    // outline around the rectangle
-                    ann.LineColor = Color.Gray;
-                    ann.AxisX = chart.ChartAreas[0].AxisX;
-                    ann.AxisY = chart.ChartAreas[0].AxisY;
-                    ann.X = candleStickDataSource[i].Date.ToOADate();
-                    // convert to double
-                    ann.Y = Convert.ToDouble(candleStickDataSource[i].High);
-                    ann.AnchorX = candleStickDataSource[i].Date.ToOADate();
-                    ann.AnchorY = Convert.ToDouble(candleStickDataSource[i].High);
-                    chart.Annotations.Add(ann); // increase the offset to add more space between annotations
-                }
-            }
-        }
-        /// <summary>
-        /// this method highlights the neutral doji pattern and shows it as a rectangle
-        /// </summary>
-        /// <param name="candleStickDataSource"></param> the candlestick data source
-        /// <param name="chart"></param> the chart to add the annotation to
-        private void showNeutralDoji(List<Candlestick> candleStickDataSource, Chart chart)
 
-        {
-            Color blue = Color.Blue;
-            chart.Legends["Legend1"].CustomItems.Add(blue, "NeutralDoji");
+                    Width = 0.5,
+                    Height = 0.5,
+                    // make the color yellow
+                    BackColor = Color.Yellow,
+                    LineColor = Color.Black,
+                    AxisX = chart.ChartAreas[0].AxisX,
+                    AxisY = chart.ChartAreas[0].AxisY,
+                    X = candlestick.Date.ToOADate(),
+                    Y = candlestick.High,
+                    AnchorX = candlestick.Date.ToOADate(),
+                    AnchorY = candlestick.High,
 
-            for (int i = 0; i < candleStickDataSource.Count; i++)
-            {
-                if (candleStickDataSource[i].isNeutralDoji())
-                {
-                    RectangleAnnotation ann = new();
-                    ann.BackColor = Color.Blue;
-                    // surround the certain area with the rectangle
-                    ann.Width = 0.5;
-                    ann.Height = 0.5;
-                    // outline around the rectangle
-                    ann.LineColor = Color.Black;
-                    ann.AxisX = chart.ChartAreas[0].AxisX;
-                    ann.AxisY = chart.ChartAreas[0].AxisY;
-                    ann.X = candleStickDataSource[i].Date.ToOADate();
-                    // convert to double
-                    ann.Y = Convert.ToDouble(candleStickDataSource[i].High);
-                    ann.AnchorX = candleStickDataSource[i].Date.ToOADate();
-                    ann.AnchorY = Convert.ToDouble(candleStickDataSource[i].High);
-                    chart.Annotations.Add(ann);
-                }
-            }
-        }
-        /// <summary>
-        /// this method highlights the gravestone doji pattern and shows it as a rectangle
-        /// </summary>
-        /// <param name="candlestickDataSource"></param> the candlestick data source
-        /// <param name="chart"></param> the chart to add the annotation to
-        private void showGravestoneDoji(List<Candlestick> candlestickDataSource, Chart chart)
-        {
-            Color green = Color.Green;
-            chart.Legends["Legend1"].CustomItems.Add(green, "GravestoneDoji");
+                };
 
-            // loop through to check for gravestone doji patterns
+                // Add the rectangle annotation to the chart annotations collection
+                chart.Annotations.Add(rectangle);
 
-
-            for (int i = 0; i < candlestickDataSource.Count; i++)
-            {
-                if (candlestickDataSource[i].isGravestoneDoji())
-                {
-                    //add a colored rectangle annotation to highlight the pattern
-                    RectangleAnnotation ann = new();
-                    ann.BackColor = Color.Green;
-                    // surround the certain area with the rectangle
-                    ann.Width = 0.5;
-                    ann.Height = 0.5;
-                    //outline around the rectangle
-                    ann.LineColor = Color.Black;
-                    ann.AxisX = chart.ChartAreas[0].AxisX;
-                    ann.AxisY = chart.ChartAreas[0].AxisY;
-                    ann.X = candlestickDataSource[i].Date.ToOADate();
-                    // convert to double
-                    ann.Y = Convert.ToDouble(candlestickDataSource[i].High);
-                    ann.AnchorX = candlestickDataSource[i].Date.ToOADate();
-                    ann.AnchorY = Convert.ToDouble(candlestickDataSource[i].High);
-                    chart.Annotations.Add(ann);
-
-
-                }
-            }
-        }
-        /// <summary>
-        /// this method highlights the dragonfly doji pattern and shows it as a rectangle
-        /// </summary>
-        /// <param name="candleStickDataSource"></param> the candlestick data source
-        /// <param name="chart"></param> the chart to add the annotation to
-        private void showDragonflyDoji(List<Candlestick> candleStickDataSource, Chart chart)
-        {
-            Color red = Color.Red;
-            chart.Legends["Legend1"].CustomItems.Add(red, "DragonflyDoji");
-
-            // loop through to check for dragonfly doji patterns
-
-
-            for (int i = 0; i < candleStickDataSource.Count; i++)
-            {
-                if (candleStickDataSource[i].isDragonFlyDoji())
-                {
-                    //add a colored rectangle annotation to highlight the pattern
-                    RectangleAnnotation ann = new();
-                    ann.BackColor = Color.Red;
-                    // surround the certain area with the rectangle
-                    ann.Width = 0.5;
-                    ann.Height = 0.5;
-                    //outline around the rectangle
-                    ann.LineColor = Color.Black;
-
-
-                    ann.AxisX = chart.ChartAreas[0].AxisX;
-                    ann.AxisY = chart.ChartAreas[0].AxisY;
-                    ann.X = candleStickDataSource[i].Date.ToOADate();
-                    // convert to double
-                    ann.Y = Convert.ToDouble(candleStickDataSource[i].High);
-                    ann.AnchorX = candleStickDataSource[i].Date.ToOADate();
-                    ann.AnchorY = Convert.ToDouble(candleStickDataSource[i].High);
-                    chart.Annotations.Add(ann);
-
-
-                }
             }
 
-        }
-        private void showWhiteMarubozu(List<Candlestick> candleStickDataSource, Chart chart)
-        {
+            // get the name from the recognizer
+            string patternSelected = recognizer.PatternName;
+            // set argument to color 
             Color yellow = Color.Yellow;
-            chart.Legends["Legend1"].CustomItems.Add(yellow, "WhiteMarubozu");
-            // loop through to check for white marubozu patterns
-            for (int i = 0; i < candleStickDataSource.Count; i++)
-            {
-                if (candleStickDataSource[i].isWhiteMarubozu())
-                {
-                    //add a colored rectangle annotation to highlight the pattern
-                    RectangleAnnotation ann = new();
-                    ann.BackColor = Color.Yellow;
-                    // surround the certain area with the rectangle
-                    ann.Width = 0.5;
-                    ann.Height = 0.5;
-                    //outline around the rectangle
-                    ann.LineColor = Color.Black;
-                    ann.AxisX = chart.ChartAreas[0].AxisX;
-                    ann.AxisY = chart.ChartAreas[0].AxisY;
-                    ann.X = candleStickDataSource[i].Date.ToOADate();
-                    // convert to double
-                    ann.Y = Convert.ToDouble(candleStickDataSource[i].High);
-                    ann.AnchorX = candleStickDataSource[i].Date.ToOADate();
-                    ann.AnchorY = Convert.ToDouble(candleStickDataSource[i].High);
-                    chart.Annotations.Add(ann);
-                }
-            }
-        }
-        private void showBlackMarubozu(List<Candlestick> candlStickDataSource, Chart chart)
-        {
-            Color blue = Color.Blue;
-            chart.Legends["Legend1"].CustomItems.Add(blue, "BlackMarubozu");
-            // loop through to check for black marubozu patterns
-            for (int i = 0; i < candlStickDataSource.Count; i++)
-            {
-                if (candlStickDataSource[i].isBlackMarubozu())
-                {
-                    //add a colored rectangle annotation to highlight the pattern
-                    RectangleAnnotation ann = new();
-                    ann.BackColor = Color.Blue;
-                    // surround the certain area with the rectangle
-                    ann.Width = 0.5;
-                    ann.Height = 0.5;
-                    //outline around the rectangle
-                    ann.LineColor = Color.Black;
-                    ann.AxisX = chart.ChartAreas[0].AxisX;
-                    ann.AxisY = chart.ChartAreas[0].AxisY;
-                    ann.X = candlStickDataSource[i].Date.ToOADate();
-                    // convert to double
-                    ann.Y = Convert.ToDouble(candlStickDataSource[i].High);
-                    ann.AnchorX = candlStickDataSource[i].Date.ToOADate();
-                    ann.AnchorY = Convert.ToDouble(candlStickDataSource[i].High);
-                    chart.Annotations.Add(ann);
-                }
-            }
-        }
-        private void showBullishHammer(List<Candlestick> candleStickDataSource, Chart chart)
-        {
-            Color orange = Color.Orange;
-            chart.Legends["Legend1"].CustomItems.Add(orange, "Hammer");
-            // loop through to check for hammer patterns
-            for (int i = 0; i < candleStickDataSource.Count; i++)
-            {
-                if (candleStickDataSource[i].isBullishHammerPattern())
-                {
-                    //add a colored rectangle annotation to highlight the pattern
-                    RectangleAnnotation ann = new();
-                    ann.BackColor = Color.Orange;
-                    // surround the certain area with the rectangle
-                    ann.Width = 0.5;
-                    ann.Height = 0.5;
-                    //outline around the rectangle
-                    ann.LineColor = Color.Black;
-                    ann.AxisX = chart.ChartAreas[0].AxisX;
-                    ann.AxisY = chart.ChartAreas[0].AxisY;
-                    ann.X = candleStickDataSource[i].Date.ToOADate();
-                    // convert to double
-                    ann.Y = Convert.ToDouble(candleStickDataSource[i].High);
-                    ann.AnchorX = candleStickDataSource[i].Date.ToOADate();
-                    ann.AnchorY = Convert.ToDouble(candleStickDataSource[i].High);
-                    chart.Annotations.Add(ann);
-                }
-            }
-        }
-        private void showInvertedHammer(List<Candlestick> candleStickDataSource, Chart chart)
-        {
-            Color green = Color.Green;
-            chart.Legends["Legend1"].CustomItems.Add(green, "InvertedHammer");
-            // loop through to check for inverted hammer patterns
-            for (int i = 0; i < candleStickDataSource.Count; i++)
-            {
-                if (candleStickDataSource[i].isInvertedHammer())
-                {
-                    //add a colored rectangle annotation to highlight the pattern
-                    RectangleAnnotation ann = new();
-                    ann.BackColor = Color.Green;
-                    // surround the certain area with the rectangle
-                    ann.Width = 0.5;
-                    ann.Height = 0.5;
-                    //outline around the rectangle
-                    ann.LineColor = Color.Black;
-                    ann.AxisX = chart.ChartAreas[0].AxisX;
-                    ann.AxisY = chart.ChartAreas[0].AxisY;
-                    ann.X = candleStickDataSource[i].Date.ToOADate();
-                    // convert to double
-                    ann.Y = Convert.ToDouble(candleStickDataSource[i].High);
-                    ann.AnchorX = candleStickDataSource[i].Date.ToOADate();
-                    ann.AnchorY = Convert.ToDouble(candleStickDataSource[i].High);
-                    chart.Annotations.Add(ann);
-                }
-            }
-        }
-        private void showBullishEngulfing(List<Candlestick> candleStickDataSource, Chart chart)
-        {
-            Color green = Color.Green;
-            chart.Legends["Legend1"].CustomItems.Add(green, "BullishEngulfing");
-            Candlestick previousCandlestick = candleStickDataSource[0];
-            // loop through to check for bullish engulfing patterns
-            for (int i = 0; i < candleStickDataSource.Count; i++)
-            {
-                if (i > 0) { previousCandlestick = candleStickDataSource[i - 1]; }
+            // add the color to the legend
+            chart.Legends["Legend1"].CustomItems.Add(yellow, patternSelected);
+            //add a colored rectangle annotation to highlight the pattern
+    
 
-                if (candleStickDataSource[i].isBullishEngulfingPattern(previousCandlestick))
-                {
-                    //add a colored rectangle annotation to highlight the pattern
-                    RectangleAnnotation ann = new();
-                    ann.BackColor = Color.Green;
-                    // surround the certain area with the rectangle
-                    ann.Width = 0.5;
-                    ann.Height = 0.5;
-                    //outline around the rectangle
-                    ann.LineColor = Color.Black;
-                    ann.AxisX = chart.ChartAreas[0].AxisX;
-                    ann.AxisY = chart.ChartAreas[0].AxisY;
-                    ann.X = candleStickDataSource[i].Date.ToOADate();
-                    // convert to double
-                    ann.Y = Convert.ToDouble(candleStickDataSource[i].High);
-                    ann.AnchorX = candleStickDataSource[i].Date.ToOADate();
-                    ann.AnchorY = Convert.ToDouble(candleStickDataSource[i].High);
-                    chart.Annotations.Add(ann);
-                }
 
-            }
-        }
-        private void showBearishEngulfing(List<Candlestick> candleStickDataSource, Chart chart)
-        {
-            Color red = Color.Red;
-            chart.Legends["Legend1"].CustomItems.Add(red, "BearishEngulfing");
-            Candlestick previousCandlestick = candleStickDataSource[0];
-            // loop through to check for bearish engulfing patterns
-            for (int i = 0; i < candleStickDataSource.Count; i++)
-            {
-                if (i > 0)  { previousCandlestick = candleStickDataSource[i - 1]; }
-
-                if (candleStickDataSource[i].isBearishEngulfingPattern(previousCandlestick))
-                {
-                    //add a colored rectangle annotation to highlight the pattern
-                    RectangleAnnotation ann = new();
-                    ann.BackColor = Color.Red;
-                    // surround the certain area with the rectangle
-                    ann.Width = 0.5;
-                    ann.Height = 0.5;
-                    //outline around the rectangle
-                    ann.LineColor = Color.Black;
-                    ann.AxisX = chart.ChartAreas[0].AxisX;
-                    ann.AxisY = chart.ChartAreas[0].AxisY;
-                    ann.X = candleStickDataSource[i].Date.ToOADate();
-                    // convert to double
-                    ann.Y = Convert.ToDouble(candleStickDataSource[i].High);
-                    ann.AnchorX = candleStickDataSource[i].Date.ToOADate();
-                    ann.AnchorY = Convert.ToDouble(candleStickDataSource[i].High);
-                    chart.Annotations.Add(ann);
-                }
-
-            }
         }
 
-        private void connectChart(List<Candlestick> candleStickDataSource, string period, string patternSelected)
+        private void connectChart(List<Candlestick> candleStickDataSource, string period, Recognizer recognizer, List<int> recognized)
         {
             //close any existing other chart windows
             List<Form> formsToClose = new List<Form>();
@@ -379,7 +114,6 @@ namespace StockProgram
             chartStock.Series.Clear();
             // initialize the series for the chart
             Series series = new();
-            // set the series name based on the period provided by the user
             chartStock.Series.Add(series);
             // hide the series legend
             chartStock.Series[0].IsVisibleInLegend = false;
@@ -424,114 +158,19 @@ namespace StockProgram
             chartStock.ChartAreas[0].AxisY.Maximum = (double)(candleStickReaderObject.getHighestHigh(candleStickDataSource) + 10);
 
             chartStock.ChartAreas[0].AxisY.Interval = 10;
-            // create bools for each pattern
-            bool longLeggedDoji = false;
-            bool gravestoneDoji = false;
-            bool neutralDoji = false;
-            bool dragonflyDoji = false;
-            bool whiteMarubozu = false;
-            bool blackMarubozu = false;
-            bool bullishHammer = false;
-            bool invertedHammer = false;
-            bool bullishEngulfing = false;
-            bool bearishEngulfing = false;
+            // mark the patterns based on the pattern selected
+            // using the recognizers
+            annotateChart(candleStickDataSource, chartStock, recognizer, recognized);
 
-            if (patternSelected == "Long Legged Doji")
-            {
-                longLeggedDoji = true;
-            }
-            else if (patternSelected == "Gravestone Doji")
-            {
-                gravestoneDoji = true;
-            }
-            else if (patternSelected == "Neutral Doji")
-            {
-                neutralDoji = true;
-            }
-            else if (patternSelected == "Dragonfly Doji")
-            {
-                dragonflyDoji = true;
-            }
-            else if (patternSelected == "White Marubozu")
-            {
-                whiteMarubozu = true;
-            }
-            else if (patternSelected == "Black Marubozu")
-            {
-                blackMarubozu = true;
-            }
-            else if (patternSelected == "Bullish Hammer")
-            {
-                bullishHammer = true;
-            }
-            else if (patternSelected == "Inverted Hammer")
-            {
-                invertedHammer = true;
-            }
-            else if (patternSelected == "Bullish Engulfing")
-            {
-                bullishEngulfing = true;
-            }
-            else if (patternSelected == "Bearish Engulfing")
-            {
-                bearishEngulfing = true;
-            }
+    
 
 
 
-            // check the boolean values and call the appropriate method to show the pattern
-            if (longLeggedDoji)
-            {
-                showLongLeggedDoji(candleStickDataSource, chartStock);
-            }
-            if (gravestoneDoji)
-            {
-                showGravestoneDoji(candleStickDataSource, chartStock);
-            }
 
-            if (neutralDoji)
-            {
-                showNeutralDoji(candleStickDataSource, chartStock);
-            }
-            if (dragonflyDoji)
-            {
-                showDragonflyDoji(candleStickDataSource, chartStock);
 
-            }
-            if (whiteMarubozu)
-            {
-                showWhiteMarubozu(candleStickDataSource, chartStock);
 
-            }
-            if (blackMarubozu)
-            {
-                showBlackMarubozu(candleStickDataSource, chartStock);
-            }
-            if (bullishHammer)
-            {
-                showBullishHammer(candleStickDataSource, chartStock);
-
-            }
-            if (invertedHammer)
-            {
-                showInvertedHammer(candleStickDataSource, chartStock);
-            }
-            if (bullishEngulfing)
-            {
-                showBullishEngulfing(candleStickDataSource, chartStock);
-            }
-            if (bearishEngulfing)
-            {
-                showBearishEngulfing(candleStickDataSource, chartStock);
-            }
-            //showNeutralDoji(candleStickDataSource, chartStock);
-            //showDragonflyDoji(candleStickDataSource, chartStock);
-            //showWhiteMarubozu(candleStickDataSource, chartStock);
-            //showBlackMarubozu(candleStickDataSource, chartStock);
-            //showBullishHammer(candleStickDataSource, chartStock);
-            //showInvertedHammer(candleStickDataSource, chartStock);
-
-            //showBullishEngulfing(candleStickDataSource, chartStock);
+     
+           
 
 
             // change the size of the chart to match the window by 90% of the size
@@ -565,20 +204,10 @@ namespace StockProgram
             // radio button daily is automatically checked
             radioButtonWasChecked(radioButtonDaily, e);
             comboBox_Pattern.Items.Clear();
-            List<string> listOfPatterns = new List<string>
-            {
-                "Long Legged Doji",
-                "Gravestone Doji",
-                "Neutral Doji",
-                "Dragonfly Doji",
-                "White Marubozu",
-                "Black Marubozu",
-                "Bullish Hammer",
-                "Inverted Hammer",
-                "Bullish Engulfing",
-                "Bearish Engulfing"
-            };
-            comboBox_Pattern.Items.AddRange(listOfPatterns.ToArray());
+            List <Recognizer> recognizers = new List<Recognizer>();
+            // initialize recognizers
+            recognizers = initializeRecognizers();
+
             // select a random pattern on initial launch
             comboBox_Pattern.SelectedIndex = new Random().Next(0, comboBox_Pattern.Items.Count);
 
@@ -586,7 +215,50 @@ namespace StockProgram
 
         }
 
+       private List<Recognizer> initializeRecognizers()
+       {     
+        
+        // single candlestick patterns
+        recognizers.Add(new BullishRecognizer());
+        recognizers.Add(new BearishRecognizer());
+        recognizers.Add(new DojiRecognizer());
+        recognizers.Add(new MarubozuRecognizer());
+        recognizers.Add(new HammerRecognizer());
+        recognizers.Add(new BullishInvertedHammerRecognizer());
+        recognizers.Add(new BearishInvertedHammerRecognizer());
+        recognizers.Add(new SpinningTopRecognizer());
+        recognizers.Add(new PaperUmbrellaRecognizer());
+        recognizers.Add(new ShootingStarRecognizer());
+        recognizers.Add(new HangingManRecognizer());
+        recognizers.Add(new InvertedHammerRecognizer());
+        recognizers.Add(new BearishHammerRecognizer());
+        recognizers.Add(new BullishHammerRecognizer());
+        recognizers.Add(new DragonFlyDojiRecognizer());
+        recognizers.Add(new GravestoneDojiRecognizer());
+        recognizers.Add(new LongLeggedDojiRecognizer());
+        recognizers.Add(new NeutralDojiRecognizer());
+        // multiple candlestick patterns
+        recognizers.Add(new BullishEngulfingPatternRecognizer());
+        recognizers.Add(new BearishEngulfingPatternRecognizer());
+        recognizers.Add(new DarkCloudCoverRecognizer());
+        recognizers.Add(new PiercingPatternRecognizer());
+        recognizers.Add(new BullishHaramiRecognizer());
+        recognizers.Add(new BearishHaramiRecognizer());
+        recognizers.Add(new MorningStarRecognizer());
+        recognizers.Add(new EveningStarRecognizer());
 
+
+
+        // now add the recognizers to the combo box
+        foreach (Recognizer rec in recognizers)
+        {
+            comboBox_Pattern.Items.Add(rec.PatternName);
+        }
+
+        return recognizers;
+
+
+       }
         /// <summary>
         /// this method makes the grid visible when the grid radio button is checked
         /// and makes the chart invisible
@@ -674,19 +346,31 @@ namespace StockProgram
             }
         }
 
-        private void comboBoxTicker_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            readStockFromComboBox();
-        }
-
+  
         private void candlestickBindingSource_CurrentChanged(object sender, EventArgs e)
         {
 
         }
+        private void comboBox_Ticker_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            // if recognizers is null initialize it
+            if (recognizers == null)
+            {
+                // initialize recognizers
+                recognizers = initializeRecognizers();
+            }
+            // logic check to make sure the index is not out of range
+            if (comboBox_Pattern.SelectedIndex < 0 || comboBox_Pattern.SelectedIndex >= recognizers.Count)
+            {
+                return;
+            }
+            Recognizer recognizer = recognizers[comboBox_Pattern.SelectedIndex];            
+            readStockFromComboBox(recognizer);
+        }
         /// <summary>
         /// this method reads the stock file from ticker box, the pattern from the pattern box and then connects the chart with the data
         /// </summary>
-        private void readStockFromComboBox()
+        private void readStockFromComboBox(Recognizer recognizer)
         {
             string dataFolder = @"Stock Data\";
             if (comboBox_Ticker.Text != string.Empty)
@@ -700,17 +384,30 @@ namespace StockProgram
                 CandlestickReader candleStickReaderObject = new();
 
                 List<Candlestick> candleSticks = candleStickReaderObject.readStockFile(filename, dateTimePickerStartDate.Value, dateTimePickerEndDate.Value);
+                List<int> recognized = recognizer.Recognize(candleSticks);
 
-                connectChart(candleSticks, period, comboBox_Pattern.Text);
+
+
+
+
+                connectChart(candleSticks, period, recognizer, recognized);
             }
         }
         private void comboBox_Pattern_SelectedIndexChanged(object sender, EventArgs e)
         {
-            readStockFromComboBox();
+            // if recognizers is null initialize it
+            if (recognizers == null)
+            {
+                // initialize recognizers
+                recognizers = initializeRecognizers();
+            }
+            Recognizer recognizer = recognizers[comboBox_Pattern.SelectedIndex];
+            readStockFromComboBox(recognizer);
           
             }
 
 
     }
+   
 
 }

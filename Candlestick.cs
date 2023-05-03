@@ -1,15 +1,36 @@
-﻿/// <summary>
+﻿using System.Data.SqlClient;
+/// <summary>
 /// this class represents a candlestick
 /// it includes the date, open, high, low, close and volume
 /// </summary>
 public class Candlestick
 {
     public DateTime Date { get; set; }
-    public Decimal Open { get; set; }
-    public Decimal High { get; set; }
-    public Decimal Low { get; set; }
-    public Decimal Close { get; set; }
+    public Double Open { get; set; }
+    public Double High { get; set; }
+    public Double Low { get; set; }
+    public Double Close { get; set; }
     public long Volume { get; set; }
+    // define period
+
+    public String Period { get; set; }
+    // define ticker
+    public String  Ticker { get; set; }
+    
+    public Double BodyTop
+    {
+        get
+        {
+            return Math.Max(Open, Close);
+        }
+    }
+    public Double BodyBottom
+    {
+        get
+        {
+            return Math.Min(Open, Close);
+        }
+    }
 
     public Candlestick()
     {
@@ -18,9 +39,11 @@ public class Candlestick
         Close = 0;
         High = 0;
         Low = 0;
-        Volume = 0;
+        Volume = 0;     
+        Period = string.Empty;
+        Ticker = string.Empty;
     }
-    public Candlestick(DateTime date, Decimal open, Decimal high, Decimal low, Decimal close, long volume)
+    public Candlestick(DateTime date, Double open, Double high, Double low, Double close, long volume, string period, string ticker)
     {
         this.Date = date;
         this.Open = open;
@@ -28,198 +51,204 @@ public class Candlestick
         this.High = high;
         this.Low = low;
         this.Volume = volume;
+        this.Period = period;
+        this.Ticker = ticker;
+
     }
-
-
-
-    /// <summary>
-    /// Determines whether the given candlestick represents a Dragonfly Doji pattern or not
-    /// 
-    /// </summary>
-    /// <param name="candlestick"> The candlesticks to check</param>
-    /// <returns> True if the candlestick represents a dragonfly pattern, false otherwise</returns>
-    /// 
-    public bool isDragonFlyDoji()
+        public Candlestick(DateTime date, Double open, Double high, Double low, Double close, long volume)
     {
-        decimal bodyLength = Math.Abs(Open - Close);
-        decimal upperShadowLength = High - Math.Max(Open, Close);
-        decimal lowerShadowLength = Math.Min(Open, Close) - Low;
-
-        // Check if the candlestick is a Dragonfly Doji
-        return (bodyLength < upperShadowLength * 0.1m && bodyLength < lowerShadowLength * 0.1m);
         
-        }
-
-    
-    /// <summary>
-    /// this method determines whether the given candlestick represents a gravestone doji pattern or not
-    /// </summary>
-    /// <param name="candlestick"></param> the candlesticks to check
-    /// <returns></returns> a boolean represents a gravestone pattern
-    public bool isGravestoneDoji()
-    {
-        decimal bodyLength = Math.Abs(Open - Close);
-        decimal upperShadowLength = High - Math.Max(Open, Close);
-        decimal lowerShadowLength = Math.Min(Open, Close) - Low;
-
-    // check if the candlestick is a gravestone doji
-    return (bodyLength < upperShadowLength * 0.1m && bodyLength < lowerShadowLength * 0.1m);
+        this.Date = date;
+        this.Open = open;
+        this.Close = close;
+        this.High = high;
+        this.Low = low;
+        this.Volume = volume;
+        this.Period = string.Empty;
+        this.Ticker = string.Empty;
+        computeProperties();
 
 
     }
-    /// <summary>
-    /// Determines whether the given candlestick represents a Neutral Doji pattern or not
-    /// </summary>
-    /// <param name="candlestick"> The candlesticks to check</param>
-    /// <returns> a boolean that  represents a Neutral Doji pattern</returns>
-    public bool isNeutralDoji()
+    public Candlestick(Candlestick candlestick)
     {
-        decimal bodyLength = Math.Abs(Open - Close);
-        decimal shadowLength = Math.Max(High - Close, Open - Low);
-
-    // Check if the candlestick is a Neutral Doji
-    return (bodyLength < shadowLength * 0.1m && shadowLength > bodyLength);
-
+        this.Date = candlestick.Date;
+        this.Open = candlestick.Open;
+        this.Close = candlestick.Close;
+        this.High = candlestick.High;
+        this.Low = candlestick.Low;
+        this.Volume = candlestick.Volume;
+        this.Ticker = candlestick.Ticker;
+        this.Period = candlestick.Period;
+        computeProperties();
 
     }
-
-    /// <summary>
-    /// Determines whether the given candlestick represents a Long-Legged Doji pattern or not
-    /// </summary>
-    /// <param name="candlestick"> The candlesticks to check</param>
-    /// <returns>  a boolean that represents the check of a  candlestick that represents a Long-Legged Doji pattern</returns>
-    public bool isLongLeggedDoji()
+    public override string ToString()
     {
-        decimal bodyLength = Math.Abs(Open - Close);
-        decimal shadowLength = Math.Max(High - Close, Open - Low);
-
-    // Check if the candlestick is a Long-Legged Doji
-    return (bodyLength < shadowLength * 0.1m && shadowLength > bodyLength * 2);
-
-
-
-
-    }
-    /// <summary>
-    /// this method determines whether the given candlestick represents a white marubozu pattern
-    /// </summary>
-    /// <returns></returns> a boolean representing whether or not its a white marubozu
-   public bool isWhiteMarubozu()
-    {
-        decimal bodyLength = Math.Abs(Open - Close);
-        decimal upperShadowLength = High - Math.Max(Open, Close);
-        decimal lowerShadowLength = Math.Min(Open, Close) - Low;
-
-    // Check if the candlestick is a White Marubozu
-    return (bodyLength > upperShadowLength && bodyLength > lowerShadowLength && Open < Close);
-
-        
-    }
-    /// <summary>
-    /// this method determines whether the given candlestick represents a black marubozu pattern
-    /// </summary>
-    /// <returns></returns> a boolean representing whether or not its a black marubozu
-  public bool isBlackMarubozu()
-    {
-        decimal bodyLength = Math.Abs(Open - Close);
-        decimal upperShadowLength = High - Math.Max(Open, Close);
-        decimal lowerShadowLength = Math.Min(Open, Close) - Low;
-
-    // Check if the candlestick is a Black Marubozu
-    return (bodyLength > upperShadowLength && bodyLength > lowerShadowLength && Open > Close);
-
-    }
-    /// <summary>
-    /// this method determines whether the candlestick has a bullish hammer pattern
-    /// </summary>
-    /// <returns></returns> a boolean representing this pattern
-public bool isBullishHammerPattern()
-    
+        string DateText;
+        Period = Period.ToUpper();
+        char p = Period[0];
+        // if this is daily weekly, or monthly, we just need the date
+        if (p == 'D' || p == 'W' || p == 'M')
         {
-        decimal bodyLength = Math.Abs(Open - Close);
-        decimal upperShadowLength = High - Math.Max(Open, Close);
-        decimal lowerShadowLength = Math.Min(Open, Close) - Low;
+            DateText = Date.ToString("MM-dd-yyyy");
+        }
+        else
+        {
+            // otherwise, we  want the time up to the minute
+            DateText = Date.ToString();
+        }
+        string result = Ticker + "," + DateText + "," + Open + "," + High + "," + Low + "," + Close + "," + Volume;
+        return result;
 
-        // Check if the candlestick is a Bullish Hammer
-        return (bodyLength < upperShadowLength * 0.1m && bodyLength < lowerShadowLength * 0.1m && Open < Close);
+    }
+    #region Higher level properties of a candlestick
 
-
-
+    //properties of the candle
+    public double range { get; private set; }
+    public double body { get; private set; }
+    public double upperTail { get; private set; }
+    public double lowerTail { get; private set; }
+    public double topPrice { get; private set; }
+    public double bottomPrice { get; private set; }
+    public double Midpoint { get; private set; }
     
-    }
 
-    /// <summary>
-    /// this method determines whether the given candlestick has an inverted hammer pattern
-    /// </summary>
-    /// <returns></returns> a boolean representing an inverted hammer
-    public bool isInvertedHammer()
+    // basic bullish/bearish/neutral properties
+    public Boolean isBullish { get; private set; }
+    public Boolean isBearish { get; private set; }
+    public Boolean isNeutral { get; private set; }
+
+    // different type of dojis
+    public Boolean isDragonFlyDoji { get; private set; }
+    public Boolean isGravestoneDoji { get; private set; }
+    public Boolean isNeutralDoji { get; private set; }
+    public Boolean isLongLeggedDoji { get; private set; }
+    public Boolean isDoji { get; private set; }
+    // different type of hammers
+    public Boolean isHammer { get; private set; }
+    public Boolean isBullishHammer { get; private set; }
+    public Boolean isBearishHammer { get; private set; }
+
+    // different types of inverted hammers
+
+    public Boolean isInvertedHammer { get; private set; }
+    public Boolean isBullishInvertedHammer { get; private set; }
+    public Boolean isBearishInvertedHammer { get; private set; }
+
+
+    // the marubozus
+    public Boolean isMarubozu { get; private set; }
+    //other types of candlesticks
+    public Boolean isSpinningTop { get; private set; }
+    public Boolean isPaperUmbrella { get; private set; }
+    public Boolean isShootingStar { get; private set; }
+    public Boolean isHangingMan { get; private set; }
+    #endregion
+
+
+    public Boolean dojiTest(double bodyTolerance = 0.03)
     {
-        // Calculate the real body and upper/lower shadow lengths
-        decimal realBody = Math.Abs(this.Open - this.Close);
-        decimal upperShadow = this.High - Math.Max(this.Open, this.Close);
-        decimal lowerShadow = Math.Min(this.Open, this.Close) - this.Low;
-
-        // Check if the candlestick has an inverted hammer pattern
-        bool isRealBodySmall = realBody < (0.1m * this.High);
-        bool isUpperShadowLong = upperShadow >= (2m * realBody);
-        bool isLowerShadowSmall = lowerShadow < (0.1m * this.High);
-
-        return isRealBodySmall && isUpperShadowLong && isLowerShadowSmall;
+        return body <= bodyTolerance * range;
     }
-    /// <summary>
-    /// 
-    /// this method determines whether the given candlestick has a bullish engulfing pattern
-    /// </summary>
-    /// <param name="previousCandle"></param>
-    /// <returns></returns> a boolean representing a bullish engulfing pattern
-    public bool isBullishEngulfingPattern(Candlestick previousCandle)
+    public Boolean spinningTopTest(double bodyTolerance = 0.03, double tailTolerance = 0.05)
     {
-        // Calculate the real body and upper/lower shadow lengths of the current candlestick
-        decimal currentRealBody = Math.Abs(this.Open - this.Close);
-        decimal currentUpperShadow = this.High - Math.Max(this.Open, this.Close);
-        decimal currentLowerShadow = Math.Min(this.Open, this.Close) - this.Low;
-
-        // Calculate the real body and upper/lower shadow lengths of the previous candlestick
-        decimal previousRealBody = Math.Abs(previousCandle.Open - previousCandle.Close);
-        decimal previousUpperShadow = previousCandle.High - Math.Max(previousCandle.Open, previousCandle.Close);
-        decimal previousLowerShadow = Math.Min(previousCandle.Open, previousCandle.Close) - previousCandle.Low;
-
-        // Check if the current candlestick is a bullish engulfing pattern
-        bool isBullishEngulfing = (this.Close > this.Open) // current candlestick is bullish
-                                 && (previousCandle.Close < previousCandle.Open) // previous candlestick is bearish
-                                 && (this.Open <= previousCandle.Close) && (this.Close >= previousCandle.Open) // engulfing condition
-                                 && (currentUpperShadow < (0.1m * this.High)) // small upper shadow for current candlestick
-                                 && (previousLowerShadow > previousRealBody) // long lower shadow for previous candlestick
-                                 && (previousRealBody < previousUpperShadow); // small real body for previous candlestick
-
-        return isBullishEngulfing;
+        return body <= bodyTolerance * range && upperTail <= tailTolerance * range && lowerTail <= tailTolerance * range;
     }
-    /// <summary>
-    /// this method determines whether the given candlestick has a bearish engulfing pattern
-    /// </summary>
-    /// <param name="previousCandle"></param>
-    /// <returns></returns> a boolean representing a bearish engulfing pattern
-    public bool isBearishEngulfingPattern(Candlestick previousCandle)
+    public Boolean dragonflyDojiTest(double bodyTolerance = 0.03, double upperTailTolerance = 0.05)
     {
-        // Calculate the real body and upper/lower shadow lengths of the current candlestick
-        decimal currentRealBody = Math.Abs(this.Open - this.Close);
-        decimal currentUpperShadow = this.High - Math.Max(this.Open, this.Close);
-        decimal currentLowerShadow = Math.Min(this.Open, this.Close) - this.Low;
-
-        // Calculate the real body and upper/lower shadow lengths of the previous candlestick
-        decimal previousRealBody = Math.Abs(previousCandle.Open - previousCandle.Close);
-        decimal previousUpperShadow = previousCandle.High - Math.Max(previousCandle.Open, previousCandle.Close);
-        decimal previousLowerShadow = Math.Min(previousCandle.Open, previousCandle.Close) - previousCandle.Low;
-
-        // Check if the current candlestick is a bearish engulfing pattern
-        bool isBearishEngulfing = (this.Close < this.Open) // current candlestick is bearish
-                                 && (previousCandle.Close > previousCandle.Open) // previous candlestick is bullish
-                                 && (this.Open >= previousCandle.Close) && (this.Close <= previousCandle.Open) // engulfing condition
-                                 && (currentLowerShadow < (0.1m * this.Low)) // small lower shadow for current candlestick
-                                 && (previousUpperShadow > previousRealBody) // long upper shadow for previous candlestick
-                                 && (previousRealBody < previousLowerShadow); // small real body for previous candlestick
-
-        return isBearishEngulfing;
+        return dojiTest(bodyTolerance) && upperTail <= upperTailTolerance * range;
     }
+    public Boolean gravestoneDojiTest(double bodyTolerance = 0.03, double lowerTailTolerance = 0.05)
+    {
+        return dojiTest(bodyTolerance) && lowerTail <= lowerTailTolerance * range;
+    }
+// long legged doji test
+public Boolean longLeggedDojiTest(double bodyTolerance = 0.03, double tailTolerance = 0.05)
+    {
+        return dojiTest(bodyTolerance) && upperTail >= tailTolerance * range && lowerTail >= tailTolerance * range;
+    }
+    public Boolean hammerTest(double minBodyTolerance = 0.15, double maxBodyTolerance = 0.25, double upperTailTolerance = 0.05)
+    {
+        return body >= minBodyTolerance * range && body <= maxBodyTolerance * range && upperTail <= upperTailTolerance * range;
+    }
+    public Boolean bullishHammerTest(double minBodyTolerance = 0.15, double maxBodyTolerance = 0.25, double upperTailTolerance = 0.05)
+    {
+        return hammerTest(minBodyTolerance, maxBodyTolerance, upperTailTolerance) && Close > Open;
+    }
+    public Boolean bearishHammerTest(double minBodyTolerance = 0.15, double maxBodyTolerance = 0.25, double lowerTailTolerance = 0.05)
+    {
+        return hammerTest(minBodyTolerance, maxBodyTolerance, lowerTailTolerance) && Close < Open;
+    }
+    public Boolean invertedHammerTest(double minBodyTolerance = 0.15, double maxBodyTolerance = 0.25, double lowerTailTolerance = 0.05)
+    {
+        return body >= minBodyTolerance * range && body <= maxBodyTolerance * range && lowerTail <= lowerTailTolerance * range;
 
+    }
+    public Boolean bearishInvertedHammerTest(double minBodyTolerance = 0.15, double maxBodyTolerance = 0.25, double lowerTailTolerance = 0.05)
+    {
+        return invertedHammerTest(minBodyTolerance, maxBodyTolerance, lowerTailTolerance) && Close < Open;
+    }
+    public Boolean bullishInvertedHammerTest(double minBodyTolerance = 0.15, double maxBodyTolerance = 0.25, double upperTailTolerance = 0.05)
+
+    {
+        return invertedHammerTest(minBodyTolerance, maxBodyTolerance, upperTailTolerance) && Close > Open;
+    }
+    public Boolean MarubozuTest()
+    {
+        return body == range;
+    }
+    public Boolean PaperUmbrellaTest(double bodyTolerance = 0.03, double tailTolerance = 0.05)
+    {
+        return body <= bodyTolerance * range && upperTail <= tailTolerance * range && lowerTail <= tailTolerance * range;
+    }
+    public Boolean Engulfs(Candlestick other)
+    {
+        return (other.Open < Open && other.Close > Close) || (other.Open > Open && other.Close < Close);
+    }
+    private void computeProperties()
+    {
+        range = High - Low;
+        body = Math.Abs(Open - Close);
+        topPrice = High - Math.Max(Open, Close);
+        bottomPrice = Math.Min(Open, Close) - Low;
+        upperTail = topPrice - High;
+        lowerTail = Low - bottomPrice;
+        Midpoint =  (High + Low) / 2;
+        computePatterns();
+
+
+    }
+    private void computePatterns()
+    {
+        // general
+        isBullish = Close > Open;
+        isNeutral = Close == Open;
+        isBearish = Close < Open;
+        //doji computations
+        isDoji = dojiTest();
+        isDragonFlyDoji = dragonflyDojiTest();
+        isGravestoneDoji = gravestoneDojiTest();
+        isNeutralDoji = Close == Open;
+        isLongLeggedDoji = longLeggedDojiTest();
+        // hammer computations
+        isHammer = hammerTest();
+        isBullishHammer = bullishHammerTest();
+        isBearishHammer = bearishHammerTest();
+        // inverted hammer computations
+        isInvertedHammer = invertedHammerTest();
+        isBullishInvertedHammer = bullishInvertedHammerTest();
+        isBearishInvertedHammer = bearishInvertedHammerTest();
+        // marubozu computations
+        isMarubozu = MarubozuTest();
+        // other computations
+        isSpinningTop = spinningTopTest();
+        isPaperUmbrella = PaperUmbrellaTest();
+        isHangingMan = isBearishHammer && isLongLeggedDoji;
+        isShootingStar = isBullishHammer && isLongLeggedDoji;
+
+
+
+
+    }
 }

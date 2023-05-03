@@ -158,7 +158,7 @@
             this.comboBox_Ticker.Name = "comboBox_Ticker";
             this.comboBox_Ticker.Size = new System.Drawing.Size(126, 21);
             this.comboBox_Ticker.TabIndex = 16;
-            this.comboBox_Ticker.SelectedIndexChanged += new System.EventHandler(this.comboBoxTicker_SelectedIndexChanged);
+            this.comboBox_Ticker.SelectedIndexChanged += new System.EventHandler(this.comboBox_Ticker_SelectedIndexChanged);
             // 
             // radioButtonMonthly
             // 
